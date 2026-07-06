@@ -6,6 +6,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import CourseBrowse from "./pages/CourseBrowse";
+import CourseDetail from "./pages/CourseDetail";
+import QuizAttempt from "./pages/QuizAttempt";
+import Result from "./pages/Result";
+import ReviewAnswers from "./pages/ReviewAnswers";
 
 function App() {
   return (
@@ -19,6 +23,10 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<CourseBrowse />} />
+        <Route path="/course/:courseId" element={<CourseDetail />} />
+        <Route path="/quiz/:quizId" element={<QuizAttempt />} />
+        <Route path="/quiz/:quizId/result" element={<Result />} />
+        <Route path="/quiz/:quizId/review" element={<ReviewAnswers />} />
       </Routes>
     </BrowserRouter>
   );

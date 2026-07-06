@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BookOpen, ArrowRight } from "lucide-react";
 
 // Deterministic accent color per course, based on category name so it stays
@@ -29,9 +30,11 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
           </span>
         </div>
 
-        <h3 className="font-display font-bold text-gray-900 text-[17px] leading-snug">
-          {course.title}
-        </h3>
+        <Link to={`/course/${course._id}`}>
+          <h3 className="font-display font-bold text-gray-900 text-[17px] leading-snug hover:text-[#0066FF] transition-colors">
+            {course.title}
+          </h3>
+        </Link>
         <p className="text-sm text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
           {course.description}
         </p>
