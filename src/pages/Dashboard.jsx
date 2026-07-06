@@ -63,11 +63,26 @@ export default function Dashboard() {
                 Hi, {firstName}
               </h1>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-4 py-2 rounded-full">
-              <Flame size={16} className="text-[var(--color-accent)]" strokeWidth={2.5} />
-              <span className="text-sm font-semibold text-white">
-                {stats?.streak ?? 0} day streak
-              </span>
+            <div className="flex items-center gap-2.5">
+              <Link
+                to="/leaderboard"
+                className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-white/20 transition-colors"
+              >
+                <Trophy size={15} className="text-amber-400" />
+                Leaderboard
+              </Link>
+              <Link
+                to="/profile"
+                className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-4 py-2 rounded-full text-sm font-semibold text-white hover:bg-white/20 transition-colors"
+              >
+                Profile
+              </Link>
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-4 py-2 rounded-full">
+                <Flame size={16} className="text-[var(--color-accent)]" strokeWidth={2.5} />
+                <span className="text-sm font-semibold text-white">
+                  {stats?.streak ?? 0} day streak
+                </span>
+              </div>
             </div>
           </div>
         </div>

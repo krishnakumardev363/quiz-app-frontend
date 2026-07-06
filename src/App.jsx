@@ -10,6 +10,8 @@ import CourseDetail from "./pages/CourseDetail";
 import QuizAttempt from "./pages/QuizAttempt";
 import Result from "./pages/Result";
 import ReviewAnswers from "./pages/ReviewAnswers";
+import Leaderboard from "./pages/Leaderboard";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
         <Route path="/quiz/:quizId" element={<QuizAttempt />} />
         <Route path="/quiz/:quizId/result" element={<Result />} />
         <Route path="/quiz/:quizId/review" element={<ReviewAnswers />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );
