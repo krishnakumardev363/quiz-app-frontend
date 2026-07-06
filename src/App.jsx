@@ -12,6 +12,9 @@ import Result from "./pages/Result";
 import ReviewAnswers from "./pages/ReviewAnswers";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
+import CreateCourse from "./pages/CreateCourse";
+import ManageCourse from "./pages/ManageCourse";
 
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
         <Route path="/quiz/:quizId/review" element={<ReviewAnswers />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/courses/new" element={<CreateCourse />} />
+        <Route path="/admin/courses/:courseId/manage" element={<ManageCourse />} />
       </Routes>
     </BrowserRouter>
   );
