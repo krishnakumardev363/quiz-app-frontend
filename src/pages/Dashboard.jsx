@@ -97,7 +97,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats - overlapping hero */}
-      <div className="max-w-6xl mx-auto px-6 -mt-10">
+      <div className="max-w-6xl mx-auto px-6 mt-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard icon={Trophy} label="XP earned" value={stats?.xp ?? 0} accent="text-amber-500 bg-amber-50" />
           <StatCard icon={TrendingUp} label="Avg. score" value={`${stats?.avgScore ?? 0}%`} accent="text-emerald-500 bg-emerald-50" />
