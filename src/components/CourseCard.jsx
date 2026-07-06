@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { BookOpen, ArrowRight } from "lucide-react";
+import { BookOpen, ArrowRight, Award } from "lucide-react";
+import api from "../api/axios";
 
 // Deterministic accent color per course, based on category name so it stays
 // consistent across renders without needing to store a color in the DB.
@@ -17,6 +18,26 @@ const getAccent = (key = "") => {
 
 export default function CourseCard({ course, isEnrolled, progressPercent, onEnroll }) {
   const accent = getAccent(course.category);
+
+  const handleDownloadCertificate = async () => {
+    const confirmed = window.confirm(
+      "Before downloading, please check your name in your Profile page — it will appear exactly as shown there on your certificate. Continue with download?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await api.get(`/certificate/${course._id}`, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `certificate-${course.title}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert("Could not download certificate.");
+    }
+  };
 
   return (
     <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
@@ -51,6 +72,14 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
                 style={{ width: `${progressPercent || 0}%` }}
               />
             </div>
+            {progressPercent >= 100 && (
+              <button
+                onClick={handleDownloadCertificate}
+                className="w-full mt-3 flex items-center justify-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg py-2 hover:bg-amber-100 transition-colors"
+              >
+                <Award size={14} /> Download Certificate
+              </button>
+            )}
           </div>
         ) : (
           <button

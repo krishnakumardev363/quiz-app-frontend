@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { ArrowLeft, Award, Flame, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Award, Flame, AlertTriangle, Pencil, Check, X, LogOut } from "lucide-react";
 import api from "../api/axios";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,6 +22,7 @@ export default function Profile() {
           api.get("/courses/profile/stats"),
         ]);
         setUser(meRes.data);
+        setNameInput(meRes.data.name);
         setStats(statsRes.data);
       } finally {
         setLoading(false);
@@ -33,17 +39,94 @@ export default function Profile() {
     );
   }
 
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) {
+      setNameError("Name cannot be empty");
+      return;
+    }
+    setSavingName(true);
+    setNameError("");
+    try {
+      const res = await api.put("/auth/update-profile", { name: nameInput.trim() });
+      setUser(res.data);
+      setEditingName(false);
+    } catch (err) {
+      setNameError(err.response?.data?.message || "Could not update name");
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <div className="bg-white border-b border-gray-100 px-6 py-5">
-        <div className="max-w-3xl mx-auto">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1 text-xs text-gray-400 font-medium hover:text-gray-600 mb-1"
+        <div className="max-w-3xl mx-auto flex justify-between items-start">
+          <div>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1 text-xs text-gray-400 font-medium hover:text-gray-600 mb-1"
+            >
+              <ArrowLeft size={13} /> Dashboard
+            </Link>
+
+            {editingName ? (
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="font-display text-xl font-bold text-gray-900 border-b-2 border-[#0066FF] focus:outline-none px-1"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={savingName}
+                  className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"
+                >
+                  <Check size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingName(false);
+                    setNameInput(user.name);
+                    setNameError("");
+                  }}
+                  className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-100"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-xl font-bold text-gray-900">{user?.name}'s Profile</h1>
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="p-1 text-gray-300 hover:text-[#0066FF] transition-colors"
+                  title="Edit name"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            )}
+            {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
+            <p className="text-xs text-gray-400 mt-1">
+              Make sure your name is correct — it appears on your course certificates.
+            </p>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-xs font-semibold text-red-500 bg-red-50 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors"
           >
-            <ArrowLeft size={13} /> Dashboard
-          </Link>
-          <h1 className="font-display text-xl font-bold text-gray-900">{user?.name}'s Profile</h1>
+            <LogOut size={14} /> Logout
+          </button>
         </div>
       </div>
 

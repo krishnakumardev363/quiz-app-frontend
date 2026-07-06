@@ -111,16 +111,16 @@ export default function QuizAttempt() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-100 px-6 py-3 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div>
-            <p className="font-display font-semibold text-gray-900 text-sm">{quiz.title}</p>
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-display font-semibold text-gray-900 text-sm truncate">{quiz.title}</p>
             <p className="text-xs text-gray-400">
               Question {currentIndex + 1} of {questions.length}
             </p>
           </div>
           <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 ${
               isLowTime ? "bg-red-50 text-red-600" : "bg-blue-50 text-[#0066FF]"
             }`}
           >
@@ -138,9 +138,9 @@ export default function QuizAttempt() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Question card */}
-        <div className="md:col-span-3 bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="md:col-span-3 bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
           <div className="flex justify-between items-start mb-5">
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide capitalize">
               {currentQuestion.difficulty} difficulty

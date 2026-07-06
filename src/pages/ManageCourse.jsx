@@ -199,7 +199,7 @@ function QuizManager({ subjectId }) {
             required
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <select
               value={form.difficulty}
               onChange={(e) => setForm({ ...form, difficulty: e.target.value })}
@@ -225,7 +225,7 @@ function QuizManager({ subjectId }) {
               Negative marking
             </label>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="submit"
               className="bg-[#0066FF] text-white text-xs font-semibold rounded-md px-3 py-1.5"
@@ -362,7 +362,7 @@ function QuestionManager({ quizId }) {
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setShowManualForm(!showManualForm)}
           className="text-xs font-medium text-[#0066FF] hover:underline flex items-center gap-1"
