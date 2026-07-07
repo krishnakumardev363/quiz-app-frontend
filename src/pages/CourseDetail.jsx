@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Clock, PlayCircle, CheckCircle2, Info, Users } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, PlayCircle, CheckCircle2, Info, Users, BookText } from "lucide-react";
 import api from "../api/axios";
 
 export default function CourseDetail() {
@@ -83,6 +83,27 @@ export default function CourseDetail() {
             {subjects.map((subject) => (
               <div key={subject._id}>
                 <h2 className="font-display font-semibold text-gray-900 mb-3">{subject.title}</h2>
+
+                {subject.lessons && subject.lessons.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    <p className="text-xs font-semibold text-gray-400 uppercase">
+                      Study Material
+                    </p>
+                    {subject.lessons.map((lesson) => (
+                      <button
+                        key={lesson._id}
+                        onClick={() => navigate(`/lesson/${lesson._id}`)}
+                        className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-[#0066FF] hover:shadow-sm transition-all text-left"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
+                          <BookText size={16} className="text-violet-600" />
+                        </div>
+                        <p className="font-medium text-gray-900 text-sm">{lesson.title}</p>
+                        <ChevronRight size={16} className="text-gray-300 ml-auto" />
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {subject.quizzes.length === 0 ? (
                   <p className="text-sm text-gray-400 pl-1">No quizzes yet.</p>

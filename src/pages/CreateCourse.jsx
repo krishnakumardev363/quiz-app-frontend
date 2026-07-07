@@ -5,7 +5,7 @@ import api from "../api/axios";
 
 export default function CreateCourse() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: "", description: "", category: "" });
+  const [form, setForm] = useState({ title: "", description: "", category: "", certificateXpRequired: 0 });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -72,6 +72,23 @@ export default function CreateCourse() {
               placeholder="What will students learn?"
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Certificate XP requirement <span className="text-gray-400 font-normal">(0 = free for everyone)</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              name="certificateXpRequired"
+              value={form.certificateXpRequired}
+              onChange={handleChange}
+              placeholder="e.g. 250 for a premium course"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Students need this much XP to download the certificate for this course.
+            </p>
           </div>
           <button
             type="submit"

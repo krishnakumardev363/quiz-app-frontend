@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Flame, Trophy, BookOpen, TrendingUp, ArrowRight } from "lucide-react";
+import { Flame, Trophy, BookOpen, TrendingUp, ArrowRight, Zap } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import api from "../api/axios";
 import CourseCard from "../components/CourseCard";
@@ -73,6 +73,12 @@ export default function Dashboard() {
                   Admin Panel
                 </Link>
               )}
+              <Link
+                to="/xp-store"
+                className="flex items-center gap-1.5 bg-amber-400/20 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-amber-200 hover:bg-amber-400/30 transition-colors"
+              >
+                <Zap size={14} /> XP Store
+              </Link>
               <Link
                 to="/history"
                 className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-white hover:bg-white/20 transition-colors"

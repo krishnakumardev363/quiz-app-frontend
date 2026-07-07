@@ -114,11 +114,170 @@ export default function ManageCourse() {
               </div>
 
               {expandedSubject === subject._id && (
-                <QuizManager subjectId={subject._id} />
+                <>
+                  <LessonManager subjectId={subject._id} />
+                  <QuizManager subjectId={subject._id} />
+                </>
               )}
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LessonManager({ subjectId }) {
+  const [lessons, setLessons] = useState([]);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualForm, setManualForm] = useState({ title: "", content: "" });
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [expandedLesson, setExpandedLesson] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLessons = async () => {
+    try {
+      const res = await api.get(`/admin/lessons/subject/${subjectId}`);
+      setLessons(res.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLessons();
+  }, [subjectId]);
+
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post("/admin/lessons", { ...manualForm, subjectId });
+      setManualForm({ title: "", content: "" });
+      setShowManualForm(false);
+      fetchLessons();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Could not add lesson.");
+    }
+  };
+
+  const handleGenerateAI = async (e) => {
+    e.preventDefault();
+    if (!aiTopic.trim()) return;
+    setAiLoading(true);
+    setMessage("");
+    try {
+      const res = await api.post("/admin/lessons/generate-ai", { subjectId, topic: aiTopic });
+      setMessage(res.data.message);
+      setAiTopic("");
+      fetchLessons();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "AI generation failed.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this lesson?")) return;
+    try {
+      await api.delete(`/admin/lessons/${id}`);
+      fetchLessons();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Could not delete lesson.");
+    }
+  };
+
+  if (loading) return <p className="px-5 pb-2 text-xs text-gray-400">Loading lessons...</p>;
+
+  return (
+    <div className="border-t border-gray-100 px-5 py-4">
+      <p className="text-xs font-semibold text-gray-400 uppercase mb-2">
+        Lesson Content ({lessons.length})
+      </p>
+      {message && <p className="text-xs text-blue-600 mb-2">{message}</p>}
+
+      {lessons.map((lesson) => (
+        <div key={lesson._id} className="mb-2">
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2.5">
+            <button
+              onClick={() =>
+                setExpandedLesson(expandedLesson === lesson._id ? null : lesson._id)
+              }
+              className="text-sm font-medium text-gray-800 flex-1 text-left flex items-center gap-2"
+            >
+              {lesson.title}
+              {lesson.source === "ai" && (
+                <span className="text-[10px] font-semibold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">
+                  AI
+                </span>
+              )}
+            </button>
+            <button onClick={() => handleDelete(lesson._id)} className="p-1 text-gray-400 hover:text-red-500">
+              <Trash2 size={13} />
+            </button>
+          </div>
+          {expandedLesson === lesson._id && (
+            <p className="text-xs text-gray-600 mt-2 ml-2 whitespace-pre-line leading-relaxed">
+              {lesson.content}
+            </p>
+          )}
+        </div>
+      ))}
+
+      <div className="flex gap-2 mt-3">
+        <button
+          onClick={() => setShowManualForm(!showManualForm)}
+          className="text-xs font-medium text-[#0066FF] hover:underline flex items-center gap-1"
+        >
+          <Plus size={12} /> Add manually
+        </button>
+      </div>
+
+      {showManualForm && (
+        <form onSubmit={handleManualSubmit} className="bg-gray-50 rounded-lg p-3 space-y-2 mt-2">
+          <input
+            value={manualForm.title}
+            onChange={(e) => setManualForm({ ...manualForm, title: e.target.value })}
+            placeholder="Lesson title"
+            required
+            className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-xs"
+          />
+          <textarea
+            value={manualForm.content}
+            onChange={(e) => setManualForm({ ...manualForm, content: e.target.value })}
+            placeholder="Lesson content / study notes"
+            required
+            rows={4}
+            className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-xs"
+          />
+          <button type="submit" className="bg-gray-900 text-white text-xs font-semibold rounded-md px-3 py-1.5">
+            Save Lesson
+          </button>
+        </form>
+      )}
+
+      <div className="bg-violet-50 rounded-lg p-3 mt-3">
+        <p className="text-xs font-semibold text-violet-700 mb-2 flex items-center gap-1">
+          <Sparkles size={12} /> Generate lesson content with AI
+        </p>
+        <form onSubmit={handleGenerateAI} className="flex flex-wrap gap-2">
+          <input
+            value={aiTopic}
+            onChange={(e) => setAiTopic(e.target.value)}
+            placeholder="Topic (e.g. React Hooks)"
+            required
+            className="flex-1 min-w-[150px] rounded-md border border-gray-300 px-2 py-1.5 text-xs"
+          />
+          <button
+            type="submit"
+            disabled={aiLoading}
+            className="bg-violet-600 text-white text-xs font-semibold rounded-md px-3 py-1.5 disabled:opacity-60"
+          >
+            {aiLoading ? "Generating..." : "Generate"}
+          </button>
+        </form>
       </div>
     </div>
   );

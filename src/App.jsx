@@ -20,6 +20,8 @@ import ManageCourse from "./pages/ManageCourse";
 import MultiplayerLobby from "./pages/MultiplayerLobby";
 import MultiplayerPlay from "./pages/MultiplayerPlay";
 import MultiplayerHostView from "./pages/MultiplayerHostView";
+import LessonView from "./pages/LessonView";
+import XpStore from "./pages/XpStore";
 import MyHistory from "./pages/MyHistory";
 import AdminHistory from "./pages/AdminHistory";
 
@@ -40,6 +42,8 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/courses" element={<ProtectedRoute><CourseBrowse /></ProtectedRoute>} />
         <Route path="/course/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
+        <Route path="/lesson/:lessonId" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
+        <Route path="/xp-store" element={<ProtectedRoute><XpStore /></ProtectedRoute>} />
         <Route path="/quiz/:quizId" element={<ProtectedRoute><QuizAttempt /></ProtectedRoute>} />
         <Route path="/quiz/:quizId/result" element={<ProtectedRoute><Result /></ProtectedRoute>} />
         <Route path="/quiz/:quizId/review" element={<ProtectedRoute><ReviewAnswers /></ProtectedRoute>} />

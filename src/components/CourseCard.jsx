@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, ArrowRight, Award } from "lucide-react";
 import api from "../api/axios";
 
@@ -18,6 +18,7 @@ const getAccent = (key = "") => {
 
 export default function CourseCard({ course, isEnrolled, progressPercent, onEnroll }) {
   const accent = getAccent(course.category);
+  const navigate = useNavigate();
 
   const handleDownloadCertificate = async () => {
     const confirmed = window.confirm(
@@ -35,6 +36,24 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
       link.click();
       link.remove();
     } catch (err) {
+      // Error responses come back as a Blob too (since responseType is blob) - parse it
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          if (err.response.status === 402) {
+            const wantsXpStore = window.confirm(
+              `${parsed.message}\n\nWant to visit the XP Store now?`
+            );
+            if (wantsXpStore) navigate("/xp-store");
+            return;
+          }
+          alert(parsed.message || "Could not download certificate.");
+          return;
+        } catch {
+          // fall through to generic error
+        }
+      }
       alert("Could not download certificate.");
     }
   };
