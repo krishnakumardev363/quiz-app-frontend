@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Clock, PlayCircle, CheckCircle2, Info } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, PlayCircle, CheckCircle2, Info, Users } from "lucide-react";
 import api from "../api/axios";
 
 export default function CourseDetail() {
@@ -10,13 +10,18 @@ export default function CourseDetail() {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const res = await api.get(`/courses/${courseId}`);
-        setCourse(res.data.course);
-        setSubjects(res.data.subjects);
+        const [detailRes, meRes] = await Promise.all([
+          api.get(`/courses/${courseId}`),
+          api.get("/auth/me"),
+        ]);
+        setCourse(detailRes.data.course);
+        setSubjects(detailRes.data.subjects);
+        setIsAdmin(meRes.data.role === "admin");
       } catch (err) {
         setError(err.response?.data?.message || "Could not load course.");
       } finally {
@@ -84,16 +89,18 @@ export default function CourseDetail() {
                 ) : (
                   <div className="space-y-2">
                     {subject.quizzes.map((quiz) => (
-                      <button
+                      <div
                         key={quiz._id}
-                        onClick={() => navigate(`/quiz/${quiz._id}`)}
-                        className={`w-full flex items-center justify-between bg-white border rounded-xl px-4 py-3.5 hover:shadow-sm transition-all text-left ${
+                        className={`w-full flex items-center justify-between bg-white border rounded-xl px-4 py-3.5 hover:shadow-sm transition-all ${
                           quiz.isCompleted
                             ? "border-emerald-200 bg-emerald-50/40"
                             : "border-gray-100 hover:border-[#0066FF]"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => navigate(`/quiz/${quiz._id}`)}
+                          className="flex items-center gap-3 flex-1 text-left"
+                        >
                           <div
                             className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                               quiz.isCompleted ? "bg-emerald-100" : "bg-blue-50"
@@ -127,9 +134,18 @@ export default function CourseDetail() {
                               )}
                             </div>
                           </div>
-                        </div>
-                        <ChevronRight size={18} className="text-gray-300" />
-                      </button>
+                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
+                            className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors mr-2 shrink-0"
+                            title="Host a live multiplayer round"
+                          >
+                            <Users size={13} /> Host
+                          </button>
+                        )}
+                        <ChevronRight size={18} className="text-gray-300 shrink-0" />
+                      </div>
                     ))}
                   </div>
                 )}

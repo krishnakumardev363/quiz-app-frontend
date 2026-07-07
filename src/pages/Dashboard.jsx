@@ -74,6 +74,18 @@ export default function Dashboard() {
                 </Link>
               )}
               <Link
+                to="/history"
+                className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-white hover:bg-white/20 transition-colors"
+              >
+                History
+              </Link>
+              <Link
+                to="/multiplayer"
+                className="flex items-center gap-1.5 bg-violet-400/20 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-violet-200 hover:bg-violet-400/30 transition-colors"
+              >
+                Join Multiplayer
+              </Link>
+              <Link
                 to="/leaderboard"
                 className="flex items-center gap-1.5 bg-white/10 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-white hover:bg-white/20 transition-colors"
               >

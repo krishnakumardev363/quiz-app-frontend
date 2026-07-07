@@ -17,6 +17,11 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import CreateCourse from "./pages/CreateCourse";
 import ManageCourse from "./pages/ManageCourse";
+import MultiplayerLobby from "./pages/MultiplayerLobby";
+import MultiplayerPlay from "./pages/MultiplayerPlay";
+import MultiplayerHostView from "./pages/MultiplayerHostView";
+import MyHistory from "./pages/MyHistory";
+import AdminHistory from "./pages/AdminHistory";
 
 function App() {
   return (
@@ -54,6 +59,14 @@ function App() {
           path="/admin/courses/:courseId/manage"
           element={<ProtectedRoute requireAdmin><ManageCourse /></ProtectedRoute>}
         />
+
+        {/* Multiplayer */}
+        <Route path="/multiplayer" element={<ProtectedRoute><MultiplayerLobby /></ProtectedRoute>} />
+        <Route path="/multiplayer/host/:quizId" element={<ProtectedRoute><MultiplayerLobby /></ProtectedRoute>} />
+        <Route path="/multiplayer/:roomCode/play" element={<ProtectedRoute><MultiplayerPlay /></ProtectedRoute>} />
+        <Route path="/multiplayer/:roomCode/host" element={<ProtectedRoute requireAdmin><MultiplayerHostView /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><MyHistory /></ProtectedRoute>} />
+        <Route path="/admin/history" element={<ProtectedRoute requireAdmin><AdminHistory /></ProtectedRoute>} />
       </Routes>
       </BrowserRouter>
     </ThemeProvider>

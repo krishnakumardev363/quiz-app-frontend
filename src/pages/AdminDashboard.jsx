@@ -50,12 +50,20 @@ export default function AdminDashboard() {
             <p className="text-blue-300 text-xs font-medium">Admin Panel</p>
             <h1 className="font-display text-2xl font-bold text-white mt-0.5">Manage Courses</h1>
           </div>
-          <Link
-            to="/admin/courses/new"
-            className="flex items-center gap-1.5 bg-[#0066FF] text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-blue-700 transition-colors"
-          >
-            <Plus size={16} /> New Course
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/admin/history"
+              className="flex items-center gap-1.5 bg-white/10 text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-white/20 transition-colors"
+            >
+              <BarChart3 size={16} /> Results History
+            </Link>
+            <Link
+              to="/admin/courses/new"
+              className="flex items-center gap-1.5 bg-[#0066FF] text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-blue-700 transition-colors"
+            >
+              <Plus size={16} /> New Course
+            </Link>
+          </div>
         </div>
       </div>
 
