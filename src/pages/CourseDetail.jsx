@@ -138,7 +138,7 @@ export default function CourseDetail() {
                       return (
                         <div
                           key={quiz._id}
-                          className={`w-full flex items-center justify-between bg-white border rounded-xl px-4 py-3.5 transition-all ${
+                          className={`w-full flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 sm:justify-between bg-white border rounded-xl px-4 py-3.5 transition-all ${
                             isLocked
                               ? "border-gray-100 opacity-60"
                               : quiz.isCompleted
@@ -152,10 +152,10 @@ export default function CourseDetail() {
                                 ? navigate(`/lesson/${firstUnreadLesson._id}`)
                                 : navigate(`/quiz/${quiz._id}`)
                             }
-                            className="flex items-center gap-3 flex-1 text-left"
+                            className="flex items-start sm:items-center gap-3 flex-1 text-left min-w-0"
                           >
                             <div
-                              className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                              className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
                                 isLocked
                                   ? "bg-gray-100"
                                   : quiz.isCompleted
@@ -171,8 +171,8 @@ export default function CourseDetail() {
                                 <PlayCircle size={17} className="text-[#0066FF]" />
                               )}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
                                 <p className="font-medium text-gray-900 text-sm">{quiz.title}</p>
                                 {quiz.isCompleted && (
                                   <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
@@ -185,7 +185,7 @@ export default function CourseDetail() {
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 mt-1">
                                 <span className="flex items-center gap-1">
                                   <Clock size={11} /> {quiz.duration} min
                                 </span>
@@ -199,16 +199,18 @@ export default function CourseDetail() {
                               </div>
                             </div>
                           </button>
-                          {isAdmin && !isLocked && (
-                            <button
-                              onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
-                              className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors mr-2 shrink-0"
-                              title="Host a live multiplayer round"
-                            >
-                              <Users size={13} /> Host
-                            </button>
-                          )}
-                          <ChevronRight size={18} className="text-gray-300 shrink-0" />
+                          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                            {isAdmin && !isLocked && (
+                              <button
+                                onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
+                                className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors"
+                                title="Host a live multiplayer round"
+                              >
+                                <Users size={13} /> Host
+                              </button>
+                            )}
+                            <ChevronRight size={18} className="text-gray-300 hidden sm:block" />
+                          </div>
                         </div>
                       );
                     })}

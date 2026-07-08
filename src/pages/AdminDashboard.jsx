@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Trash2, Copy, BookOpen, BarChart3 } from "lucide-react";
+import { Plus, Trash2, BookOpen, BarChart3, LayoutDashboard } from "lucide-react";
 import api from "../api/axios";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchCourses = async () => {
     try {
@@ -24,13 +26,15 @@ export default function AdminDashboard() {
     fetchCourses();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this course? This cannot be undone.")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await api.delete(`/admin/courses/${id}`);
+      await api.delete(`/admin/courses/${deleteTarget}`);
+      setDeleteTarget(null);
       fetchCourses();
     } catch (err) {
-      alert(err.response?.data?.message || "Could not delete course.");
+      setError(err.response?.data?.message || "Could not delete course.");
+      setDeleteTarget(null);
     }
   };
 
@@ -44,25 +48,35 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <div className="bg-gray-900 px-6 py-6">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <div>
-            <p className="text-blue-300 text-xs font-medium">Admin Panel</p>
-            <h1 className="font-display text-2xl font-bold text-white mt-0.5">Manage Courses</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/admin/history"
-              className="flex items-center gap-1.5 bg-white/10 text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-white/20 transition-colors"
-            >
-              <BarChart3 size={16} /> Results History
-            </Link>
-            <Link
-              to="/admin/courses/new"
-              className="flex items-center gap-1.5 bg-[#0066FF] text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-blue-700 transition-colors"
-            >
-              <Plus size={16} /> New Course
-            </Link>
+      <div className="bg-gray-900 px-4 sm:px-6 py-5 sm:py-6">
+        <div className="max-w-5xl mx-auto">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1 text-xs text-gray-400 font-medium hover:text-gray-200 mb-2"
+          >
+            <LayoutDashboard size={13} /> Back to Dashboard
+          </Link>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div>
+              <p className="text-blue-300 text-xs font-medium">Admin Panel</p>
+              <h1 className="font-display text-xl sm:text-2xl font-bold text-white mt-0.5">
+                Manage Courses
+              </h1>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/admin/history"
+                className="flex items-center gap-1.5 bg-white/10 text-white text-xs sm:text-sm font-semibold rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-white/20 transition-colors"
+              >
+                <BarChart3 size={15} /> Results History
+              </Link>
+              <Link
+                to="/admin/courses/new"
+                className="flex items-center gap-1.5 bg-[#0066FF] text-white text-xs sm:text-sm font-semibold rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-blue-700 transition-colors"
+              >
+                <Plus size={15} /> New Course
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -100,7 +114,7 @@ export default function AdminDashboard() {
                     Manage
                   </button>
                   <button
-                    onClick={() => handleDelete(course._id)}
+                    onClick={() => setDeleteTarget(course._id)}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete course"
                   >
@@ -112,6 +126,17 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this course?"
+        message="This will permanently remove the course along with its subjects, lessons, and quizzes. This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        tone="warning"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

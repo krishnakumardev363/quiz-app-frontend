@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle2, LayoutDashboard } from "lucide-react";
 import api from "../api/axios";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function ManageCourse() {
   const { courseId } = useParams();
@@ -11,6 +12,7 @@ export default function ManageCourse() {
   const [expandedSubject, setExpandedSubject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [deleteSubjectTarget, setDeleteSubjectTarget] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -41,13 +43,15 @@ export default function ManageCourse() {
     }
   };
 
-  const handleDeleteSubject = async (id) => {
-    if (!window.confirm("Delete this subject and all its quizzes?")) return;
+  const handleDeleteSubject = async () => {
+    if (!deleteSubjectTarget) return;
     try {
-      await api.delete(`/admin/subjects/${id}`);
+      await api.delete(`/admin/subjects/${deleteSubjectTarget}`);
+      setDeleteSubjectTarget(null);
       fetchData();
     } catch (err) {
       setMessage(err.response?.data?.message || "Could not delete subject.");
+      setDeleteSubjectTarget(null);
     }
   };
 
@@ -61,23 +65,26 @@ export default function ManageCourse() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <div className="bg-white border-b border-gray-100 px-6 py-5">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-4xl mx-auto">
-          <Link
-            to="/admin"
-            className="inline-flex items-center gap-1 text-xs text-gray-400 font-medium hover:text-gray-600 mb-1"
-          >
-            <ArrowLeft size={13} /> Admin Dashboard
-          </Link>
-          <h1 className="font-display text-xl font-bold text-gray-900">{course?.title}</h1>
+          <div className="flex items-center gap-3 text-xs text-gray-400 font-medium mb-1">
+            <Link to="/admin" className="inline-flex items-center gap-1 hover:text-gray-600">
+              <ArrowLeft size={13} /> Admin Dashboard
+            </Link>
+            <span className="text-gray-200">|</span>
+            <Link to="/dashboard" className="inline-flex items-center gap-1 hover:text-gray-600">
+              <LayoutDashboard size={13} /> Student Dashboard
+            </Link>
+          </div>
+          <h1 className="font-display text-lg sm:text-xl font-bold text-gray-900">{course?.title}</h1>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {message && <p className="text-sm text-red-600 mb-4">{message}</p>}
 
-        {/* Add subject */}
-        <form onSubmit={handleAddSubject} className="flex gap-2 mb-6">
+        {/* Add subject - stacks on mobile, side-by-side from sm up */}
+        <form onSubmit={handleAddSubject} className="flex flex-col sm:flex-row gap-2 mb-6">
           <input
             value={newSubject}
             onChange={(e) => setNewSubject(e.target.value)}
@@ -86,7 +93,7 @@ export default function ManageCourse() {
           />
           <button
             type="submit"
-            className="flex items-center gap-1.5 bg-gray-900 text-white text-sm font-semibold rounded-lg px-4 py-2.5 hover:bg-gray-800 transition-colors"
+            className="flex items-center justify-center gap-1.5 bg-gray-900 text-white text-sm font-semibold rounded-lg px-4 py-2.5 hover:bg-gray-800 transition-colors shrink-0"
           >
             <Plus size={15} /> Add Subject
           </button>
@@ -106,7 +113,7 @@ export default function ManageCourse() {
                   {subject.title}
                 </button>
                 <button
-                  onClick={() => handleDeleteSubject(subject._id)}
+                  onClick={() => setDeleteSubjectTarget(subject._id)}
                   className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <Trash2 size={14} />
@@ -123,6 +130,17 @@ export default function ManageCourse() {
           ))}
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!deleteSubjectTarget}
+        title="Delete this subject?"
+        message="This will also delete all lessons and quizzes inside it. This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        tone="warning"
+        onCancel={() => setDeleteSubjectTarget(null)}
+        onConfirm={handleDeleteSubject}
+      />
     </div>
   );
 }
