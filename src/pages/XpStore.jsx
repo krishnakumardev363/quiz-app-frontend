@@ -45,7 +45,7 @@ export default function XpStore() {
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        name: "DeagleTech",
+        name: "Quizera",
         description: `${pkg.xp} XP Top-up`,
         order_id: data.orderId,
         handler: async (response) => {

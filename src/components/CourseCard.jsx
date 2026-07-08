@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, ArrowRight, Award } from "lucide-react";
 import api from "../api/axios";
+import ConfirmModal from "./ConfirmModal";
 
 // Deterministic accent color per course, based on category name so it stays
 // consistent across renders without needing to store a color in the DB.
@@ -20,12 +22,11 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
   const accent = getAccent(course.category);
   const navigate = useNavigate();
 
-  const handleDownloadCertificate = async () => {
-    const confirmed = window.confirm(
-      "Before downloading, please check your name in your Profile page — it will appear exactly as shown there on your certificate. Continue with download?"
-    );
-    if (!confirmed) return;
+  // Modal state machine: null | "confirm-name" | "need-xp" | "generic-error"
+  const [modal, setModal] = useState(null);
+  const [modalMessage, setModalMessage] = useState("");
 
+  const startDownload = async () => {
     try {
       const res = await api.get(`/certificate/${course._id}`, { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -42,19 +43,19 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
           const text = await err.response.data.text();
           const parsed = JSON.parse(text);
           if (err.response.status === 402) {
-            const wantsXpStore = window.confirm(
-              `${parsed.message}\n\nWant to visit the XP Store now?`
-            );
-            if (wantsXpStore) navigate("/xp-store");
+            setModalMessage(parsed.message);
+            setModal("need-xp");
             return;
           }
-          alert(parsed.message || "Could not download certificate.");
+          setModalMessage(parsed.message || "Could not download certificate.");
+          setModal("generic-error");
           return;
         } catch {
           // fall through to generic error
         }
       }
-      alert("Could not download certificate.");
+      setModalMessage("Could not download certificate.");
+      setModal("generic-error");
     }
   };
 
@@ -93,7 +94,7 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
             </div>
             {progressPercent >= 100 && (
               <button
-                onClick={handleDownloadCertificate}
+                onClick={() => setModal("confirm-name")}
                 className="w-full mt-3 flex items-center justify-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg py-2 hover:bg-amber-100 transition-colors"
               >
                 <Award size={14} /> Download Certificate
@@ -110,6 +111,44 @@ export default function CourseCard({ course, isEnrolled, progressPercent, onEnro
           </button>
         )}
       </div>
+
+      <ConfirmModal
+        open={modal === "confirm-name"}
+        title="Double-check your name"
+        message="Your name will appear exactly as shown in your Profile page on this certificate. Make sure it's correct before downloading."
+        confirmLabel="Download"
+        cancelLabel="Cancel"
+        onCancel={() => setModal(null)}
+        onConfirm={() => {
+          setModal(null);
+          startDownload();
+        }}
+      />
+
+      <ConfirmModal
+        open={modal === "need-xp"}
+        title="More XP needed"
+        message={modalMessage}
+        confirmLabel="Visit XP Store"
+        cancelLabel="Not now"
+        tone="warning"
+        onCancel={() => setModal(null)}
+        onConfirm={() => {
+          setModal(null);
+          navigate("/xp-store");
+        }}
+      />
+
+      <ConfirmModal
+        open={modal === "generic-error"}
+        title="Something went wrong"
+        message={modalMessage}
+        confirmLabel="OK"
+        cancelLabel="Close"
+        tone="warning"
+        onCancel={() => setModal(null)}
+        onConfirm={() => setModal(null)}
+      />
     </div>
   );
 }

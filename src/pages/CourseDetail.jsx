@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Clock, PlayCircle, CheckCircle2, Info, Users, BookText } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, PlayCircle, CheckCircle2, Info, Users, BookText, Lock } from "lucide-react";
 import api from "../api/axios";
 
 export default function CourseDetail() {
@@ -93,13 +93,30 @@ export default function CourseDetail() {
                       <button
                         key={lesson._id}
                         onClick={() => navigate(`/lesson/${lesson._id}`)}
-                        className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-[#0066FF] hover:shadow-sm transition-all text-left"
+                        className={`w-full flex items-center gap-3 bg-white border rounded-xl px-4 py-3 hover:shadow-sm transition-all text-left ${
+                          lesson.isRead
+                            ? "border-emerald-200 bg-emerald-50/40"
+                            : "border-gray-100 hover:border-[#0066FF]"
+                        }`}
                       >
-                        <div className="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
-                          <BookText size={16} className="text-violet-600" />
+                        <div
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                            lesson.isRead ? "bg-emerald-100" : "bg-violet-50"
+                          }`}
+                        >
+                          {lesson.isRead ? (
+                            <CheckCircle2 size={16} className="text-emerald-600" />
+                          ) : (
+                            <BookText size={16} className="text-violet-600" />
+                          )}
                         </div>
-                        <p className="font-medium text-gray-900 text-sm">{lesson.title}</p>
-                        <ChevronRight size={16} className="text-gray-300 ml-auto" />
+                        <p className="font-medium text-gray-900 text-sm flex-1">{lesson.title}</p>
+                        {lesson.isRead && (
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                            Read
+                          </span>
+                        )}
+                        <ChevronRight size={16} className="text-gray-300" />
                       </button>
                     ))}
                   </div>
@@ -109,65 +126,92 @@ export default function CourseDetail() {
                   <p className="text-sm text-gray-400 pl-1">No quizzes yet.</p>
                 ) : (
                   <div className="space-y-2">
-                    {subject.quizzes.map((quiz) => (
-                      <div
-                        key={quiz._id}
-                        className={`w-full flex items-center justify-between bg-white border rounded-xl px-4 py-3.5 hover:shadow-sm transition-all ${
-                          quiz.isCompleted
-                            ? "border-emerald-200 bg-emerald-50/40"
-                            : "border-gray-100 hover:border-[#0066FF]"
-                        }`}
-                      >
-                        <button
-                          onClick={() => navigate(`/quiz/${quiz._id}`)}
-                          className="flex items-center gap-3 flex-1 text-left"
+                    {!subject.allLessonsRead && subject.lessons?.length > 0 && (
+                      <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-1">
+                        Finish reading the study material above to unlock these quizzes.
+                      </p>
+                    )}
+                    {subject.quizzes.map((quiz) => {
+                      const isLocked = !subject.allLessonsRead && subject.lessons?.length > 0;
+                      const firstUnreadLesson = subject.lessons?.find((l) => !l.isRead);
+
+                      return (
+                        <div
+                          key={quiz._id}
+                          className={`w-full flex items-center justify-between bg-white border rounded-xl px-4 py-3.5 transition-all ${
+                            isLocked
+                              ? "border-gray-100 opacity-60"
+                              : quiz.isCompleted
+                              ? "border-emerald-200 bg-emerald-50/40 hover:shadow-sm"
+                              : "border-gray-100 hover:border-[#0066FF] hover:shadow-sm"
+                          }`}
                         >
-                          <div
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                              quiz.isCompleted ? "bg-emerald-100" : "bg-blue-50"
-                            }`}
-                          >
-                            {quiz.isCompleted ? (
-                              <CheckCircle2 size={17} className="text-emerald-600" />
-                            ) : (
-                              <PlayCircle size={17} className="text-[#0066FF]" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-gray-900 text-sm">{quiz.title}</p>
-                              {quiz.isCompleted && (
-                                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
-                                  Completed
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                              <span className="flex items-center gap-1">
-                                <Clock size={11} /> {quiz.duration} min
-                              </span>
-                              <span className="capitalize">{quiz.difficulty}</span>
-                              <span>{quiz.totalQuestions} questions</span>
-                              {quiz.bestScore !== null && (
-                                <span className={quiz.isCompleted ? "text-emerald-600 font-medium" : "text-amber-600 font-medium"}>
-                                  Best: {quiz.bestScore}%
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                        {isAdmin && (
                           <button
-                            onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
-                            className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors mr-2 shrink-0"
-                            title="Host a live multiplayer round"
+                            onClick={() =>
+                              isLocked
+                                ? navigate(`/lesson/${firstUnreadLesson._id}`)
+                                : navigate(`/quiz/${quiz._id}`)
+                            }
+                            className="flex items-center gap-3 flex-1 text-left"
                           >
-                            <Users size={13} /> Host
+                            <div
+                              className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                                isLocked
+                                  ? "bg-gray-100"
+                                  : quiz.isCompleted
+                                  ? "bg-emerald-100"
+                                  : "bg-blue-50"
+                              }`}
+                            >
+                              {isLocked ? (
+                                <Lock size={15} className="text-gray-400" />
+                              ) : quiz.isCompleted ? (
+                                <CheckCircle2 size={17} className="text-emerald-600" />
+                              ) : (
+                                <PlayCircle size={17} className="text-[#0066FF]" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-gray-900 text-sm">{quiz.title}</p>
+                                {quiz.isCompleted && (
+                                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                                    Completed
+                                  </span>
+                                )}
+                                {isLocked && (
+                                  <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                                    Locked
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                                <span className="flex items-center gap-1">
+                                  <Clock size={11} /> {quiz.duration} min
+                                </span>
+                                <span className="capitalize">{quiz.difficulty}</span>
+                                <span>{quiz.totalQuestions} questions</span>
+                                {quiz.bestScore !== null && (
+                                  <span className={quiz.isCompleted ? "text-emerald-600 font-medium" : "text-amber-600 font-medium"}>
+                                    Best: {quiz.bestScore}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </button>
-                        )}
-                        <ChevronRight size={18} className="text-gray-300 shrink-0" />
-                      </div>
-                    ))}
+                          {isAdmin && !isLocked && (
+                            <button
+                              onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
+                              className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors mr-2 shrink-0"
+                              title="Host a live multiplayer round"
+                            >
+                              <Users size={13} /> Host
+                            </button>
+                          )}
+                          <ChevronRight size={18} className="text-gray-300 shrink-0" />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

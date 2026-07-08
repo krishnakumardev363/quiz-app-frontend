@@ -16,6 +16,7 @@ export default function QuizAttempt() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [unreadLesson, setUnreadLesson] = useState(null);
 
   const timerRef = useRef(null);
 
@@ -28,6 +29,9 @@ export default function QuizAttempt() {
         setSecondsLeft(res.data.quiz.duration * 60);
       } catch (err) {
         setError(err.response?.data?.message || "Could not start quiz.");
+        if (err.response?.status === 403 && err.response?.data?.unreadLessons?.length > 0) {
+          setUnreadLesson(err.response.data.unreadLessons[0]);
+        }
       } finally {
         setLoading(false);
       }
@@ -82,8 +86,18 @@ export default function QuizAttempt() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
-        <p className="text-red-600 text-sm">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] px-4">
+        <div className="text-center max-w-sm">
+          <p className="text-red-600 text-sm mb-4">{error}</p>
+          {unreadLesson && (
+            <button
+              onClick={() => navigate(`/lesson/${unreadLesson._id}`)}
+              className="bg-[#0066FF] text-white text-sm font-semibold rounded-xl px-5 py-2.5 hover:bg-blue-700 transition-colors"
+            >
+              Read "{unreadLesson.title}"
+            </button>
+          )}
+        </div>
       </div>
     );
   }
