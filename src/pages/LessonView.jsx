@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookText, ChevronRight, ChevronLeft, Check, Lock } from "lucide-react";
 import api from "../api/axios";
 
-const READ_TIME_SECONDS = 60;
+const READ_TIME_SECONDS = 10;
 
 // Splits lesson content into readable "pages". Paragraphs are separated by
 // blank lines. If a paragraph's first line looks like a short heading
