@@ -7,21 +7,23 @@ import api from "../api/axios";
  * Pass requireAdmin to also require role === "admin" - non-admins get
  * redirected to the student dashboard instead of seeing the admin UI.
  */
-export default function ProtectedRoute({ children, requireAdmin = false }) {
+export default function ProtectedRoute({ children, requireAdmin = false, requireSuperAdmin = false }) {
   const [status, setStatus] = useState("checking"); // checking | ok | unauthorized | forbidden
 
   useEffect(() => {
     api
       .get("/auth/me")
       .then((res) => {
-        if (requireAdmin && res.data.role !== "admin") {
+        if (requireSuperAdmin && res.data.role !== "admin") {
+          setStatus("forbidden");
+        } else if (requireAdmin && !["admin", "staff"].includes(res.data.role)) {
           setStatus("forbidden");
         } else {
           setStatus("ok");
         }
       })
       .catch(() => setStatus("unauthorized"));
-  }, [requireAdmin]);
+  }, [requireAdmin, requireSuperAdmin]);
 
   if (status === "checking") {
     return (

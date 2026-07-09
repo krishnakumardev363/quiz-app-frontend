@@ -3,27 +3,40 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookText, ChevronRight, ChevronLeft, Check, Lock } from "lucide-react";
 import api from "../api/axios";
 
-const READ_TIME_SECONDS = 10;
+const READ_TIME_SECONDS = 60;
 
-// Splits lesson content into readable "pages". Paragraphs are separated by
-// blank lines. If a paragraph's first line looks like a short heading
-// (no ending period, under ~60 chars), it's styled distinctly from the body.
+const isHeadingLine = (line) =>
+  line.length > 0 && line.length < 60 && !line.endsWith(".") && !line.endsWith(",");
+
 const parsePages = (content) => {
   const paragraphs = content
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
 
-  return paragraphs.map((para) => {
-    const lines = para.split("\n");
-    const firstLine = lines[0].trim();
-    const isHeading = firstLine.length > 0 && firstLine.length < 60 && !firstLine.endsWith(".");
+  const pages = [];
+  let i = 0;
 
-    if (isHeading && lines.length > 1) {
-      return { heading: firstLine, body: lines.slice(1).join(" ").trim() };
+  while (i < paragraphs.length) {
+    const lines = paragraphs[i].split("\n").map((l) => l.trim()).filter(Boolean);
+    const firstLine = lines[0] || "";
+
+    if (lines.length > 1 && isHeadingLine(firstLine)) {
+      // Heading and body written in the same paragraph
+      pages.push({ heading: firstLine, body: lines.slice(1).join(" ") });
+      i += 1;
+    } else if (lines.length === 1 && isHeadingLine(firstLine) && i + 1 < paragraphs.length) {
+      // Heading on its own line, body is the NEXT paragraph - merge them into one page
+      pages.push({ heading: firstLine, body: paragraphs[i + 1] });
+      i += 2;
+    } else {
+      // Plain paragraph with no distinct heading
+      pages.push({ heading: null, body: paragraphs[i] });
+      i += 1;
     }
-    return { heading: null, body: para };
-  });
+  }
+
+  return pages;
 };
 
 export default function LessonView() {

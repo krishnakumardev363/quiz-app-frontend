@@ -21,7 +21,7 @@ export default function CourseDetail() {
         ]);
         setCourse(detailRes.data.course);
         setSubjects(detailRes.data.subjects);
-        setIsAdmin(meRes.data.role === "admin");
+        setIsAdmin(["admin", "staff"].includes(meRes.data.role));
       } catch (err) {
         setError(err.response?.data?.message || "Could not load course.");
       } finally {

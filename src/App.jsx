@@ -24,6 +24,7 @@ import LessonView from "./pages/LessonView";
 import XpStore from "./pages/XpStore";
 import MyHistory from "./pages/MyHistory";
 import AdminHistory from "./pages/AdminHistory";
+import AdminUsers from "./pages/AdminUsers";
 
 function App() {
   return (
@@ -70,7 +71,8 @@ function App() {
         <Route path="/multiplayer/:roomCode/play" element={<ProtectedRoute><MultiplayerPlay /></ProtectedRoute>} />
         <Route path="/multiplayer/:roomCode/host" element={<ProtectedRoute requireAdmin><MultiplayerHostView /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><MyHistory /></ProtectedRoute>} />
-        <Route path="/admin/history" element={<ProtectedRoute requireAdmin><AdminHistory /></ProtectedRoute>} />
+        <Route path="/admin/history" element={<ProtectedRoute requireSuperAdmin><AdminHistory /></ProtectedRoute>} />
+        <Route path="/admin/staff" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
       </Routes>
       </BrowserRouter>
     </ThemeProvider>

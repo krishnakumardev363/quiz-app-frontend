@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 export default function ConfirmModal({
@@ -14,8 +15,8 @@ export default function ConfirmModal({
 
   const accentColor = tone === "warning" ? "text-amber-600 bg-amber-50" : "text-[#0066FF] bg-blue-50";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 relative">
         <button
           onClick={onCancel}
@@ -46,6 +47,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -5,7 +5,13 @@ import api from "../api/axios";
 
 export default function CreateCourse() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: "", description: "", category: "", certificateXpRequired: 0 });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    certificateXpRequired: 0,
+    visibility: "public",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -88,6 +94,38 @@ export default function CreateCourse() {
             />
             <p className="text-xs text-gray-400 mt-1">
               Students need this much XP to download the certificate for this course.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Visibility</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, visibility: "public" })}
+                className={`text-sm font-medium rounded-lg py-2.5 border transition-colors ${
+                  form.visibility === "public"
+                    ? "border-[#0066FF] bg-blue-50 text-[#0066FF]"
+                    : "border-gray-200 text-gray-500"
+                }`}
+              >
+                Public
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, visibility: "private" })}
+                className={`text-sm font-medium rounded-lg py-2.5 border transition-colors ${
+                  form.visibility === "private"
+                    ? "border-violet-500 bg-violet-50 text-violet-600"
+                    : "border-gray-200 text-gray-500"
+                }`}
+              >
+                Private
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              {form.visibility === "private"
+                ? "Hidden from the student catalog. Students can only join via a multiplayer room code you share."
+                : "Visible to all students in the course catalog."}
             </p>
           </div>
           <button

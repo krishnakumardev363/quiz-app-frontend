@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Trash2, BookOpen, BarChart3, LayoutDashboard } from "lucide-react";
+import { Plus, Trash2, BookOpen, BarChart3, LayoutDashboard, UserCog, Lock, Globe } from "lucide-react";
 import api from "../api/axios";
 import ConfirmModal from "../components/ConfirmModal";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
+  const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchCourses = async () => {
     try {
-      const res = await api.get("/admin/courses");
-      setCourses(res.data);
+      const [coursesRes, meRes] = await Promise.all([api.get("/admin/courses"), api.get("/auth/me")]);
+      setCourses(coursesRes.data);
+      setMe(meRes.data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load courses.");
     } finally {
@@ -64,12 +66,22 @@ export default function AdminDashboard() {
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/admin/history"
-                className="flex items-center gap-1.5 bg-white/10 text-white text-xs sm:text-sm font-semibold rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-white/20 transition-colors"
-              >
-                <BarChart3 size={15} /> Results History
-              </Link>
+              {me?.role === "admin" && (
+                <>
+                  <Link
+                    to="/admin/staff"
+                    className="flex items-center gap-1.5 bg-violet-500/20 text-violet-200 text-xs sm:text-sm font-semibold rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-violet-500/30 transition-colors"
+                  >
+                    <UserCog size={15} /> Manage Staff
+                  </Link>
+                  <Link
+                    to="/admin/history"
+                    className="flex items-center gap-1.5 bg-white/10 text-white text-xs sm:text-sm font-semibold rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-white/20 transition-colors"
+                  >
+                    <BarChart3 size={15} /> Results History
+                  </Link>
+                </>
+              )}
               <Link
                 to="/admin/courses/new"
                 className="flex items-center gap-1.5 bg-[#0066FF] text-white text-xs sm:text-sm font-semibold rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-blue-700 transition-colors"
@@ -103,8 +115,24 @@ export default function AdminDashboard() {
                 className="flex items-center justify-between px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
               >
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">{course.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{course.category}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 text-sm">{course.title}</p>
+                    {course.visibility === "private" ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full">
+                        <Lock size={9} /> Private
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                        <Globe size={9} /> Public
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {course.category}
+                    {course.instructorId?.name && (
+                      <> • by {course.instructorId.name}</>
+                    )}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
