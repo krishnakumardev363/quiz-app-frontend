@@ -22,7 +22,11 @@ export default function Dashboard() {
         ]);
         setUser(meRes.data);
         setStats(statsRes.data);
-        setEnrollments(enrollRes.data);
+        // ============ FILTER OUT ORPHANED ENROLLMENTS ============
+        // If the enrolled course was deleted, populate("courseId") returns
+        // null for that entry. Drop those here so CourseCard never even
+        // receives a null course, regardless of what the backend returns.
+        setEnrollments(enrollRes.data.filter((enr) => enr.courseId));
       } catch (err) {
         setError("Could not load dashboard. Please try logging in again.");
       } finally {
@@ -65,7 +69,7 @@ export default function Dashboard() {
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
-              {["admin", "staff"].includes(user?.role) && (
+              {user?.role === "admin" && (
                 <Link
                   to="/admin"
                   className="flex items-center gap-1.5 bg-amber-400/20 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-amber-300 hover:bg-amber-400/30 transition-colors"
