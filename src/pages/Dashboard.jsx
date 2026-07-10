@@ -65,7 +65,7 @@ export default function Dashboard() {
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
-              {user?.role === "admin" && (
+              {["admin", "staff"].includes(user?.role) && (
                 <Link
                   to="/admin"
                   className="flex items-center gap-1.5 bg-amber-400/20 backdrop-blur px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-amber-300 hover:bg-amber-400/30 transition-colors"

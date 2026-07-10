@@ -200,7 +200,7 @@ export default function CourseDetail() {
                             </div>
                           </button>
                           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                            {isAdmin && !isLocked && (
+                            {isAdmin && (
                               <button
                                 onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
                                 className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors"

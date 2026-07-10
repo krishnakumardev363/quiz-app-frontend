@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookText, ChevronRight, ChevronLeft, Check, Lock } from "lucide-react";
 import api from "../api/axios";
 
-const READ_TIME_SECONDS = 10;
+const READ_TIME_SECONDS = 60;
 
 const isHeadingLine = (line) =>
   line.length > 0 && line.length < 60 && !line.endsWith(".") && !line.endsWith(",");
