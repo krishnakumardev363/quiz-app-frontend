@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle2, LayoutDashboard, Users } from "lucide-react";
 import api from "../api/axios";
 import ConfirmModal from "../components/ConfirmModal";
 
@@ -356,6 +356,14 @@ function QuizManager({ subjectId }) {
             >
               {quiz.title} <span className="text-xs text-gray-400">({quiz.totalQuestions} Qs)</span>
             </button>
+            {/* ============ HOST BUTTON (works for public AND private courses) ============ */}
+            <Link
+              to={`/multiplayer/host/${quiz._id}`}
+              title="Host a live multiplayer round for this quiz"
+              className="flex items-center gap-1 text-xs font-medium text-[#0066FF] hover:underline px-2"
+            >
+              <Users size={13} /> Host
+            </Link>
             <button
               onClick={() => handleDeleteQuiz(quiz._id)}
               className="p-1 text-gray-400 hover:text-red-500"
