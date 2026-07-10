@@ -22,7 +22,11 @@ export default function Dashboard() {
         ]);
         setUser(meRes.data);
         setStats(statsRes.data);
-        setEnrollments(enrollRes.data);
+        // ============ FILTER OUT ORPHANED ENROLLMENTS ============
+        // If the enrolled course was deleted, populate("courseId") returns
+        // null for that entry. Drop those here so CourseCard never even
+        // receives a null course, regardless of what the backend returns.
+        setEnrollments(enrollRes.data.filter((enr) => enr.courseId));
       } catch (err) {
         setError("Could not load dashboard. Please try logging in again.");
       } finally {
