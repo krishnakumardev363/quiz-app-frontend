@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
+import socket from "../api/socket";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,6 +20,17 @@ export default function Login() {
 
     try {
       await api.post("/auth/login", form);
+      // ============ RE-AUTHENTICATE THE SHARED SOCKET ============
+      // The shared socket (api/socket.js) auto-connects the instant its
+      // module is first evaluated, which can happen on the Login page
+      // itself - before the auth cookie exists. Socket.IO captures the
+      // handshake cookies once and never refreshes them for that
+      // connection's lifetime, so without this, every socket-authenticated
+      // action (like hosting a quiz) would see a null user forever, even
+      // after a successful login. Forcing a disconnect+reconnect here
+      // makes the socket re-handshake with the cookie that was just set.
+      socket.disconnect();
+      socket.connect();
       navigate("/dashboard");
     } catch (err) {
       const message = err.response?.data?.message || "Login failed. Please try again.";

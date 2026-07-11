@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ArrowLeft, Award, Flame, AlertTriangle, Pencil, Check, X, LogOut } from "lucide-react";
 import api from "../api/axios";
+import socket from "../api/socket";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -61,6 +62,9 @@ export default function Profile() {
     try {
       await api.post("/auth/logout");
     } finally {
+      // Drop the authenticated socket connection so it doesn't stay
+      // handshaked as this user after logout (e.g. shared device).
+      socket.disconnect();
       navigate("/login");
     }
   };

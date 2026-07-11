@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../api/axios";
+import socket from "../api/socket";
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
@@ -20,6 +21,10 @@ export default function VerifyOtp() {
 
     try {
       await api.post("/auth/verify-otp", { email, otp });
+      // Same reason as Login.jsx - re-handshake the socket with the
+      // cookie that verify-otp just set.
+      socket.disconnect();
+      socket.connect();
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Verification failed. Please try again.");
