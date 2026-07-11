@@ -108,33 +108,39 @@ export default function AdminDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-gray-100 rounded-2xl border border-gray-100 overflow-hidden">
             {courses.map((course) => (
               <div
                 key={course._id}
-                className="flex items-center justify-between px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
+                className="flex items-center justify-between  gap-3 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
               >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900 text-sm">{course.title}</p>
+                {/* ============ COURSE INFO (truncates to keep every row the same height) ============ */}
+                <div className="min-w-0 flex-1 m-2 gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p
+                      title={course.title}
+                      className="font-medium text-gray-900 text-sm truncate min-w-0"
+                    >
+                      {course.title}
+                    </p>
                     {course.visibility === "private" ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full shrink-0">
                         <Lock size={9} /> Private
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">
                         <Globe size={9} /> Public
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">
                     {course.category}
                     {course.instructorId?.name && (
                       <> • by {course.instructorId.name}</>
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => navigate(`/admin/courses/${course._id}/manage`)}
                     className="text-xs font-medium text-[#0066FF] hover:underline px-2"

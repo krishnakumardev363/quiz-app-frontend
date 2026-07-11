@@ -110,7 +110,12 @@ export default function CourseDetail() {
                             <BookText size={16} className="text-violet-600" />
                           )}
                         </div>
-                        <p className="font-medium text-gray-900 text-sm flex-1">{lesson.title}</p>
+                        <p
+                          title={lesson.title}
+                          className="font-medium text-gray-900 text-sm flex-1 truncate min-w-0"
+                        >
+                          {lesson.title}
+                        </p>
                         {lesson.isRead && (
                           <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
                             Read
@@ -200,7 +205,7 @@ export default function CourseDetail() {
                             </div>
                           </button>
                           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                            {isAdmin && (
+                            {isAdmin && !isLocked && (
                               <button
                                 onClick={() => navigate(`/multiplayer/host/${quiz._id}`)}
                                 className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1.5 rounded-lg hover:bg-violet-100 transition-colors"
