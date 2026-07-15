@@ -108,14 +108,17 @@ export default function AdminDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="bg-gray-100 rounded-2xl border border-gray-100 overflow-hidden">
-            {courses.map((course) => (
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            {courses.map((course) => {
+              const isDuplicateTitle =
+                courses.filter((c) => c.title === course.title).length > 1;
+              return (
               <div
                 key={course._id}
-                className="flex items-center justify-between  gap-3 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
+                className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
               >
                 {/* ============ COURSE INFO (truncates to keep every row the same height) ============ */}
-                <div className="min-w-0 flex-1 m-2 gap-2">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 min-w-0">
                     <p
                       title={course.title}
@@ -123,6 +126,11 @@ export default function AdminDashboard() {
                     >
                       {course.title}
                     </p>
+                    {isDuplicateTitle && (
+                      <span className="text-[10px] font-mono text-amber-600 shrink-0">
+                        ID: ...{course._id.slice(-6)}
+                      </span>
+                    )}
                     {course.visibility === "private" ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full shrink-0">
                         <Lock size={9} /> Private
@@ -156,7 +164,8 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

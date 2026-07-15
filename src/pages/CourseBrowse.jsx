@@ -6,7 +6,7 @@ import CourseCard from "../components/CourseCard";
 
 export default function CourseBrowse() {
   const [courses, setCourses] = useState([]);
-  const [enrolledIds, setEnrolledIds] = useState(new Set());
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -17,7 +17,7 @@ export default function CourseBrowse() {
         api.get("/courses/my-enrollments"),
       ]);
       setCourses(coursesRes.data);
-      setEnrolledIds(new Set(enrollRes.data.map((e) => e.courseId?._id)));
+      setEnrollments(enrollRes.data);
     } catch (err) {
       setMessage("Could not load courses.");
     } finally {
@@ -77,14 +77,30 @@ export default function CourseBrowse() {
           <p className="text-gray-400 text-sm text-center py-16">No courses available yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {courses.map((course) => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                isEnrolled={enrolledIds.has(course._id)}
-                onEnroll={handleEnroll}
-              />
-            ))}
+            {courses.map((course) => {
+              const enrollment = enrollments.find((e) => e.courseId?._id === course._id);
+              // ============ DUPLICATE TITLE DETECTION ============
+              // If two different courses share the same title, matching
+              // by title alone (as a human would) becomes unreliable -
+              // show the real ID so they're visually distinguishable.
+              const isDuplicateTitle =
+                courses.filter((c) => c.title === course.title).length > 1;
+              return (
+                <div key={course._id}>
+                  {isDuplicateTitle && (
+                    <p className="text-[10px] text-amber-600 font-mono mb-1 px-1">
+                      ID: ...{course._id.slice(-6)}
+                    </p>
+                  )}
+                  <CourseCard
+                    course={course}
+                    isEnrolled={!!enrollment}
+                    progressPercent={enrollment?.progressPercent ?? 0}
+                    onEnroll={handleEnroll}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
