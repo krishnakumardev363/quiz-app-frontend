@@ -75,7 +75,7 @@ export default function LessonView() {
       return;
     }
 
-    setSecondsLeft(QUIZERA_SECONDS);
+    setSecondsLeft(READ_TIME_SECONDS);
     timerRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {

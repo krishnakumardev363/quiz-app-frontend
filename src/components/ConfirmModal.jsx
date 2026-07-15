@@ -26,7 +26,7 @@ export default function ConfirmModal({
         </button>
 
         <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-3 ${accentColor}`}>
-          Quizera
+          TinoraTech
         </span>
 
         <h2 className="font-display text-lg font-bold text-gray-900 mb-2">{title}</h2>
