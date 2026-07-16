@@ -1,43 +1,215 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookText, ChevronRight, ChevronLeft, Check, Lock } from "lucide-react";
+import { ArrowLeft, BookText, ChevronRight, ChevronLeft, Check, Lock, Copy } from "lucide-react";
 import api from "../api/axios";
 
-const READ_TIME_SECONDS = 5;
+// ============ CONTENT PARSING ============
+// Lesson content is stored as plain text. Supported inline conventions:
+//  - Short standalone lines (no trailing period/comma, under 60 chars) = headings
+//  - ```fenced code blocks``` = code (preferred, used by AI-generated lessons)
+//  - Un-fenced but code-shaped lines (older content) are still detected and
+//    rendered as code, so existing lessons don't need to be regenerated
+//  - ![alt](url) on its own line = an inline image
 
 const isHeadingLine = (line) =>
-  line.length > 0 && line.length < 60 && !line.endsWith(".") && !line.endsWith(",");
+  line.length > 0 && line.length < 60 && !line.endsWith(".") && !line.endsWith(",") && !line.startsWith("```");
 
-const parsePages = (content) => {
-  const paragraphs = content
+const CODE_HINT_RE = /^(def |import |from |class |print\(|for |if |while |const |let |var |function |return\b|#include|public |private |void |int |SELECT |INSERT |UPDATE |DELETE )/i;
+
+// Heuristic fallback for code written without ``` fences (older AI content):
+// treat a multi-line paragraph as code if most of its lines look code-shaped.
+function looksLikeCode(lines) {
+  if (lines.length < 2) return false;
+  const codeish = lines.filter(
+    (l) => /[a-zA-Z0-9_\]"']\s*=(?!=)\s*\S/.test(l) || CODE_HINT_RE.test(l.trim()) || /[{}();]\s*$/.test(l.trim())
+  );
+  return codeish.length / lines.length >= 0.5;
+}
+
+const IMAGE_RE = /^!\[([^\]]*)\]\((\S+)\)$/;
+
+const countWords = (text) => text.split(/\s+/).filter(Boolean).length;
+
+// Parse the whole lesson content into a flat list of typed blocks:
+// { type: "heading" | "paragraph" | "code" | "image", ... , weight }
+// "weight" is an approximate reading-effort score used for pagination.
+function parseBlocks(content) {
+  const rawParagraphs = content
+    .replace(/\r/g, "")
     .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+    .filter((p) => p.trim());
 
-  const pages = [];
-  let i = 0;
+  const blocks = [];
 
-  while (i < paragraphs.length) {
-    const lines = paragraphs[i].split("\n").map((l) => l.trim()).filter(Boolean);
-    const firstLine = lines[0] || "";
+  for (const para of rawParagraphs) {
+    const lines = para.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) continue;
 
-    if (lines.length > 1 && isHeadingLine(firstLine)) {
-      // Heading and body written in the same paragraph
-      pages.push({ heading: firstLine, body: lines.slice(1).join(" ") });
-      i += 1;
-    } else if (lines.length === 1 && isHeadingLine(firstLine) && i + 1 < paragraphs.length) {
-      // Heading on its own line, body is the NEXT paragraph - merge them into one page
-      pages.push({ heading: firstLine, body: paragraphs[i + 1] });
-      i += 2;
-    } else {
-      // Plain paragraph with no distinct heading
-      pages.push({ heading: null, body: paragraphs[i] });
-      i += 1;
+    // Fenced code block (may be the whole paragraph)
+    if (lines[0].startsWith("```")) {
+      const codeLines = [];
+      let inFence = false;
+      for (const l of lines) {
+        if (l.startsWith("```")) {
+          inFence = !inFence;
+          continue;
+        }
+        codeLines.push(l);
+      }
+      if (codeLines.length > 0) {
+        blocks.push({ type: "code", code: codeLines.join("\n"), weight: Math.max(codeLines.length * 6, 20) });
+        continue;
+      }
     }
+
+    // Standalone image line
+    if (lines.length === 1) {
+      const m = lines[0].match(IMAGE_RE);
+      if (m) {
+        blocks.push({ type: "image", alt: m[1], url: m[2], weight: 40 });
+        continue;
+      }
+    }
+
+    // Un-fenced code (older content), checked BEFORE heading detection -
+    // otherwise a code paragraph's first line (e.g. "age = 30") can get
+    // misread as a heading, since it also has no trailing punctuation.
+    if (looksLikeCode(lines)) {
+      blocks.push({ type: "code", code: lines.join("\n"), weight: Math.max(lines.length * 6, 20) });
+      continue;
+    }
+
+    // Heading + body written in the same paragraph
+    if (lines.length > 1 && isHeadingLine(lines[0])) {
+      const bodyLines = lines.slice(1);
+      blocks.push({ type: "heading", text: lines[0], weight: 3 });
+      if (looksLikeCode(bodyLines)) {
+        blocks.push({ type: "code", code: bodyLines.join("\n"), weight: Math.max(bodyLines.length * 6, 20) });
+      } else {
+        const text = bodyLines.join(" ");
+        blocks.push({ type: "paragraph", text, weight: countWords(text) });
+      }
+      continue;
+    }
+
+    // Heading alone in its own paragraph
+    if (lines.length === 1 && isHeadingLine(lines[0])) {
+      blocks.push({ type: "heading", text: lines[0], weight: 3 });
+      continue;
+    }
+
+    // Plain paragraph
+    const text = lines.join(" ");
+    blocks.push({ type: "paragraph", text, weight: countWords(text) });
   }
 
+  return blocks;
+}
+
+// Group blocks into pages using a word/effort budget per page, instead of
+// one page per heading. Never splits a single block across two pages.
+const WORDS_PER_PAGE = 200;
+
+function paginateBlocks(blocks) {
+  const pages = [];
+  let current = [];
+  let currentWeight = 0;
+
+  for (const block of blocks) {
+    if (current.length > 0 && currentWeight + block.weight > WORDS_PER_PAGE) {
+      pages.push(current);
+      current = [];
+      currentWeight = 0;
+    }
+    current.push(block);
+    currentWeight += block.weight;
+  }
+  if (current.length > 0) pages.push(current);
+  if (pages.length === 0) pages.push([]);
+
   return pages;
-};
+}
+
+// Reading timer scales with how much is actually on the page, instead of a
+// flat 10 seconds regardless of length.
+const READ_WPM = 950;
+const MIN_READ_SECONDS = 8;
+const MAX_READ_SECONDS = 180;
+
+function pageReadSeconds(pageBlocks) {
+  const totalWeight = pageBlocks.reduce((sum, b) => sum + b.weight, 0);
+  const seconds = Math.round((totalWeight / READ_WPM) * 60);
+  return Math.min(Math.max(seconds, MIN_READ_SECONDS), MAX_READ_SECONDS);
+}
+
+// ============ CODE BLOCK (with copy button) ============
+function CodeBlock({ code }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {});
+  };
+
+  return (
+    <div className="relative my-4 rounded-xl overflow-hidden border border-gray-800 bg-[#0B1020]">
+      <div className="flex items-center justify-between px-4 py-2 bg-white/5">
+        <span className="text-[11px] text-gray-400 font-mono tracking-wide">CODE</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-[11px] text-gray-300 hover:text-white transition-colors"
+        >
+          {copied ? (
+            <>
+              <Check size={12} /> Copied
+            </>
+          ) : (
+            <>
+              <Copy size={12} /> Copy
+            </>
+          )}
+        </button>
+      </div>
+      <pre className="px-4 py-3 overflow-x-auto text-[13px] leading-relaxed text-blue-100 font-mono">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+// ============ BLOCK RENDERER ============
+function LessonBlock({ block }) {
+  if (block.type === "heading") {
+    return (
+      <h2 className="font-display text-xl sm:text-2xl font-bold text-[#0066FF] mt-7 first:mt-0 mb-3">
+        {block.text}
+      </h2>
+    );
+  }
+  if (block.type === "code") {
+    return <CodeBlock code={block.code} />;
+  }
+  if (block.type === "image") {
+    return (
+      <img
+        src={block.url}
+        alt={block.alt || ""}
+        loading="lazy"
+        className="w-full rounded-xl my-4 border border-gray-100"
+      />
+    );
+  }
+  return (
+    <p className="text-[15px] sm:text-base text-gray-700 leading-[1.8] sm:leading-[1.9] mb-4 whitespace-pre-line">
+      {block.text}
+    </p>
+  );
+}
 
 export default function LessonView() {
   const { lessonId } = useParams();
@@ -45,7 +217,7 @@ export default function LessonView() {
   const [lesson, setLesson] = useState(null);
   const [pages, setPages] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(READ_TIME_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(0);
   const [unlockedPages, setUnlockedPages] = useState(new Set([0]));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -58,15 +230,15 @@ export default function LessonView() {
       .get(`/courses/lessons/${lessonId}`)
       .then((res) => {
         setLesson(res.data);
-        setPages(parsePages(res.data.content));
+        setPages(paginateBlocks(parseBlocks(res.data.content)));
       })
       .catch((err) => setError(err.response?.data?.message || "Could not load lesson."))
       .finally(() => setLoading(false));
   }, [lessonId]);
 
-  // Per-page 60 second read timer. Resets on page change, unless that page
-  // was already unlocked earlier in this session (so going back and forth
-  // doesn't force re-waiting).
+  // Per-page read timer, scaled to how much content is actually on that
+  // page. Resets on page change, unless that page was already unlocked
+  // earlier in this session (so going back and forth doesn't force re-waiting).
   useEffect(() => {
     if (pages.length === 0) return;
 
@@ -75,7 +247,8 @@ export default function LessonView() {
       return;
     }
 
-    setSecondsLeft(READ_TIME_SECONDS);
+    const duration = pageReadSeconds(pages[pageIndex] || []);
+    setSecondsLeft(duration);
     timerRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
@@ -88,7 +261,7 @@ export default function LessonView() {
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [pageIndex, pages.length]);
+  }, [pageIndex, pages]);
 
   const handleNext = () => {
     if (secondsLeft > 0) return;
@@ -127,7 +300,7 @@ export default function LessonView() {
     );
   }
 
-  const currentPage = pages[pageIndex];
+  const currentPageBlocks = pages[pageIndex] || [];
   const isLastPage = pageIndex === pages.length - 1;
   const isLocked = secondsLeft > 0;
 
@@ -156,7 +329,7 @@ export default function LessonView() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-5">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl lg:max-w-3xl mx-auto">
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-1 text-xs text-gray-400 font-medium hover:text-gray-600 mb-2"
@@ -189,18 +362,13 @@ export default function LessonView() {
         </div>
       </div>
 
-      {/* Content - centered, comfortable reading width across breakpoints */}
+      {/* Content - centered, comfortable reading width, height grows automatically */}
       <div className="flex-1 px-4 sm:px-6 py-6 sm:py-10">
         <div className="max-w-2xl lg:max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-10 min-h-[280px]">
-            {currentPage?.heading && (
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-[#0066FF] mb-4">
-                {currentPage.heading}
-              </h2>
-            )}
-            <p className="text-[15px] sm:text-base text-gray-700 leading-[1.8] sm:leading-[1.9] whitespace-pre-line">
-              {currentPage?.body}
-            </p>
+            {currentPageBlocks.map((block, idx) => (
+              <LessonBlock key={idx} block={block} />
+            ))}
           </div>
         </div>
       </div>
